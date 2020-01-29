@@ -52,7 +52,7 @@ def gradMSE(W, b, x, y, reg):
 
 
 
-def grad_descent(W, b, x, y, alpha, epochs, reg, error_tol, valid_x, valid_y, test_x, test_y):
+def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, valid_x, valid_y, test_x, test_y):
     # trainning loop
     train_loss_rec = []
     train_acc_rec = []
@@ -63,13 +63,13 @@ def grad_descent(W, b, x, y, alpha, epochs, reg, error_tol, valid_x, valid_y, te
 
     for epoch in range(epochs):
 
-        dl_dw, dl_db = gradMSE(W, b, x, y, reg)
+        dl_dw, dl_db = gradMSE(W, b, train_x, train_y, reg)
         W = W - np.transpose(alpha * dl_dw)
         b = b - alpha * dl_db
 
         if (epoch+1) % 10 == 0:
-            train_loss = MSE(W, b, x, y, reg)
-            train_acc = get_acc(W, b, x, y)
+            train_loss = MSE(W, b, train_x, train_y, args.reg)
+            train_acc = get_acc(W, b, train_x, train_y)
             valid_acc = get_acc(W, b, valid_x, valid_y)
             valid_loss = MSE(W, b, valid_x,  valid_y, reg)
             test_acc = get_acc(W, b, test_x, test_y)
@@ -141,30 +141,56 @@ def plot_loss_acc(train_loss_rec, train_acc_rec, valid_loss_rec, valid_acc_rec, 
     plt.show()
 
 
+def get_analytical(train_x, train_y, valid_x, valid_y, test_x, test_y, args):
+    n = np.shape(train_x)[0]
+    x_0 = np.ones((n, 1))
+    X = np.hstack((x_0, train_x))
+
+    psydo_inv = np.matmul(np.linalg.inv(np.matmul(np.transpose(X), X)),  np.transpose(X))
+    w_combined = np.matmul(psydo_inv, train_y)
+    W = w_combined[1:]
+    b = w_combined[0]
+
+    print("analytical results")
+    train_loss = MSE(W, b, train_x, train_y, args.reg)
+    train_acc = get_acc(W, b, train_x, train_y)
+    valid_acc = get_acc(W, b, valid_x, valid_y)
+    valid_loss = MSE(W, b, valid_x, valid_y, args.reg)
+    test_acc = get_acc(W, b, test_x, test_y)
+    test_loss = MSE(W, b, test_x, test_y, args.reg)
+
+    print("analytical results", " | train_loss:", train_loss, " train_acc:", train_acc, " valid_loss:", valid_loss,
+      " valid_acc:", valid_acc, " test_loss:", test_loss, " test_acc:", test_acc)
+    return W, b
+
+
 def main(args):
 
-    trainData, validData, testData, trainTarget, validTarget, testTarget = loadData()
-    trainData = np.resize(trainData, (len(trainTarget), 28*28))
-    validData = np.resize(validData, (len(validTarget), 28*28))
-    testData = np.resize(testData, (len(testTarget), 28*28))
+    train_x, valid_x, test_x, train_y, valid_y, test_y = loadData()
+    train_x = np.resize(train_x, (len(train_y), 28*28))
+    valid_x = np.resize(valid_x, (len(valid_y), 28*28))
+    test_x = np.resize(test_x, (len(test_y), 28*28))
 
-    print('train data length: ', len(trainData))
-    print('one train sample', trainData[0])
-    print('train target length: ', len(trainTarget))
-    print('one train target', trainTarget[0][0])
+    print('train data length: ', len(train_x))
+    print('one train sample', train_y[0])
+    print('train target length: ', len(train_y))
+    print('one train target', train_y[0][0])
 
     W = np.random.rand(28*28, 1)
     b = np.random.rand(1)
 
 
-    grad_descent(W, b, trainData, trainTarget, args.lr, args.epochs, args.reg, args.error_tol, validData, validTarget, testData, testTarget)
+    grad_descent(W, b, train_x, train_y, args.lr, args.epochs, args.reg, args.error_tol, valid_x, valid_y, test_x, test_y)
+    get_analytical(train_x, train_y,  valid_x, valid_y, test_x, test_y, args)
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch-size', type=int, default=64)
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--epochs', type=int, default=1000)
+    parser.add_argument('--epochs', type=int, default=2000)
     parser.add_argument('--reg', type=int, default=0.5)
     parser.add_argument('--error_tol', type=int, default=0.2)
 
