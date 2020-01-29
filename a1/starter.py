@@ -29,7 +29,7 @@ def MSE(W, b, x, y, reg):
     # z = np.zeros(sample_len)
     # for sample in range(sample_len):
     #     z[sample] = np.dot(x[sample], W) + b
-    l_d_1 = np.dot(x, W) + b
+    l_d_1 = np.matmul(x, W) + b
     l_d_2 = l_d_1 ** 2
     l_w_2 = W ** 2
     l = np.mean((y - l_d_1)**2) + reg/2 * sum(l_w_2)
@@ -43,9 +43,9 @@ def gradMSE(W, b, x, y, reg):
     # x: 3500*784
     # W: 784*1
     sample_len = len(y)
-    l_d_1 = np.dot(x, W) + b - y
+    l_d_1 = np.matmul(x, W) + b - y
     l_d_1 = np.transpose(l_d_1)
-    dl_dw = (2 / sample_len) * np.dot(l_d_1,x) + np.transpose(reg * W)
+    dl_dw = (2 / sample_len) * np.matmul(l_d_1,x) + np.transpose(reg * W)
     dl_db = (2 / sample_len) * np.sum(l_d_1,axis=1)
     return dl_dw, dl_db
 
