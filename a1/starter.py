@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 
+
 def loadData():
     with np.load('notMNIST.npz') as data :
         Data, Target = data ['images'], data['labels']
@@ -37,7 +38,6 @@ def MSE(W, b, x, y, reg):
     return l
 
 
-
 def gradMSE(W, b, x, y, reg):
     # compute gradients
     # x: 3500*784
@@ -50,9 +50,32 @@ def gradMSE(W, b, x, y, reg):
     return dl_dw, dl_db
 
 
+def crossEntropyLoss(W, b, x, y, reg):
+    z = np.matmul(x, W) + b
+    y_hat = 1 / (1 + np.exp((-1)*z))
+
+    loss = np.mean((-1) * y * np.log(y_hat) - (1-y) * np.log(1-y_hat)) + reg/2 * sum(W ** 2)
+    return loss
 
 
-def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, valid_x, valid_y, test_x, test_y):
+def gradCE(W, b, x, y, reg):
+    z = np.matmul(x, W) + b
+    y_hat = 1 / (1 + np.exp((-1)*z))
+    for i in range(len(y_hat)):
+        if abs(y_hat[i]-1) < 0.0001:
+            y_hat[i] -= 0.1
+        elif y_hat[i] < 0.0001:
+            y_hat[i] += 0.1
+
+    inter_mat_dw = np.transpose((-1)*y/y_hat + (1-y)/(1-y_hat) * (np.exp((-1)*z)/(1 + np.exp(-1*z))**2))
+    dl_dw = np.mean(np.matmul(inter_mat_dw, x)) + np.transpose(reg * W)
+    dl_db = np.mean((-1)*y/y_hat - (1-y)/(1-y_hat) * (np.exp((-1)*z)/(1 + np.exp(-1*z))**2))
+    # print('dl_dw: ', np.shape(dl_dw))
+    # print('dl_db: ', np.shape(dl_db))
+    return dl_dw, dl_db
+
+
+def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, lossType, valid_x, valid_y, test_x, test_y):
     # trainning loop
     train_loss_rec = []
     train_acc_rec = []
@@ -63,17 +86,22 @@ def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, valid_x,
 
     for epoch in range(epochs):
 
-        dl_dw, dl_db = gradMSE(W, b, train_x, train_y, reg)
+        if lossType == 'MSE':
+            dl_dw, dl_db = gradMSE(W, b, train_x, train_y, reg)
+            loss = MSE
+        elif lossType == 'CE':
+            dl_dw, dl_db = gradCE(W, b, train_x, train_y, reg)
+            loss = crossEntropyLoss
         W = W - np.transpose(alpha * dl_dw)
         b = b - alpha * dl_db
 
         if (epoch+1) % 10 == 0:
-            train_loss = MSE(W, b, train_x, train_y, args.reg)
+            train_loss = loss(W, b, train_x, train_y, args.reg)
             train_acc = get_acc(W, b, train_x, train_y)
             valid_acc = get_acc(W, b, valid_x, valid_y)
-            valid_loss = MSE(W, b, valid_x,  valid_y, reg)
+            valid_loss = loss(W, b, valid_x,  valid_y, reg)
             test_acc = get_acc(W, b, test_x, test_y)
-            test_loss = MSE(W, b, test_x, test_y, reg)
+            test_loss = loss(W, b, test_x, test_y, reg)
 
             train_loss_rec.append(train_loss)
             train_acc_rec.append(train_acc)
@@ -82,10 +110,10 @@ def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, valid_x,
             test_loss_rec.append(test_loss)
             test_acc_rec.append(test_acc)
 
-
             print("epoch:", epoch, " | train_loss:", train_loss, " train_acc:", train_acc, " valid_loss:", valid_loss, " valid_acc:", valid_acc, " test_loss:", test_loss, " test_acc:", test_acc)
 
     plot_loss_acc(train_loss_rec, train_acc_rec, valid_loss_rec, valid_acc_rec, test_loss_rec, test_acc_rec)
+
 
 def get_acc(W, b, x, y):
     y_pred = np.dot(x, W) + b
@@ -94,17 +122,6 @@ def get_acc(W, b, x, y):
         if (y_pred[sample] > 0.5 and y[sample] == 1) or (y_pred[sample] < 0.5 and y[sample] == 0):
             corr = corr + 1
     return corr/len(y)
-
-# def crossEntropyLoss(W, b, x, y, reg):
-#
-#
-# # Your implementation here
-#
-# def gradCE(W, b, x, y, reg):
-#
-#
-# # Your implementation here
-#
 
 
 # def buildGraph(loss="MSE"):
@@ -179,10 +196,8 @@ def main(args):
     W = np.random.rand(28*28, 1)
     b = np.random.rand(1)
 
-
-    grad_descent(W, b, train_x, train_y, args.lr, args.epochs, args.reg, args.error_tol, valid_x, valid_y, test_x, test_y)
+    grad_descent(W, b, train_x, train_y, args.lr, args.epochs, args.reg, args.error_tol, args.lossType, valid_x, valid_y, test_x, test_y)
     get_analytical(train_x, train_y,  valid_x, valid_y, test_x, test_y, args)
-
 
 
 if __name__ == '__main__':
@@ -193,7 +208,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=2000)
     parser.add_argument('--reg', type=int, default=0.5)
     parser.add_argument('--error_tol', type=int, default=0.2)
-
+    parser.add_argument('--lossType', type=str, default='CE')
 
     args = parser.parse_args()
 
