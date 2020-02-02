@@ -58,7 +58,7 @@ def crossEntropyLoss(W, b, x, y, reg):
     return loss
 
 
-def gradCE(W, b, x, y, reg):
+def gradCE_old(W, b, x, y, reg):
     z = np.matmul(x, W) + b
     y_hat = 1 / (1 + np.exp((-1)*z))
     for i in range(len(y_hat)):
@@ -70,6 +70,17 @@ def gradCE(W, b, x, y, reg):
     inter_mat_dw = np.transpose((-1)*y/y_hat + (1-y)/(1-y_hat) * (np.exp((-1)*z)/(1 + np.exp(-1*z))**2))
     dl_dw = np.mean(np.matmul(inter_mat_dw, x)) + np.transpose(reg * W)
     dl_db = np.mean((-1)*y/y_hat - (1-y)/(1-y_hat) * (np.exp((-1)*z)/(1 + np.exp(-1*z))**2))
+    # print('dl_dw: ', np.shape(dl_dw))
+    # print('dl_db: ', np.shape(dl_db))
+    return dl_dw, dl_db
+
+def gradCE(W, b, x, y, reg):
+    n = np.shape(y)[0]
+    z = np.matmul(x, W) + b
+    y_hat = 1 / (1 + np.exp((-1)*z))
+
+    dl_dw = (1/n) * np.matmul(np.transpose(y_hat - y), x) + np.transpose(reg * W)
+    dl_db = (1/n) * np.sum((y_hat - y))
     # print('dl_dw: ', np.shape(dl_dw))
     # print('dl_db: ', np.shape(dl_db))
     return dl_dw, dl_db
@@ -200,7 +211,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=2000)
     parser.add_argument('--reg', type=int, default=0.5)
     parser.add_argument('--error_tol', type=int, default=0.2)
-    parser.add_argument('--lossType', choices=['mse', 'ce'], default='ce')
+    parser.add_argument('--lossType', choices=['MSE', 'CE'], default='CE')
 
     args = parser.parse_args()
 

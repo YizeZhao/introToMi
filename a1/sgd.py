@@ -2,19 +2,20 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from starter import *
 
 
 def get_acc_two(pred, labels):
 
-    if np.shape(predictions)[0] != np.shape(labels)[0]:
+    if np.shape(pred)[0] != np.shape(labels)[0]:
         print("size mismatch")
         return False
-    batch_size = np.shape(predictions)[0]
-    correct = np.sum((predictions>=0.5)==labels
+    batch_size = np.shape(pred)[0]
+    correct = (np.sum((pred>=0.5)==labels))
     return correct/batch_size
 
 
-def buildGraph(args, train_size, valid_size, test_size, dim):
+def buildGraph(args, train_size, dim):
     # Initialize weight and bias tensors
     seed = tf.set_random_seed(421)
     sgd_graph = tf.graph()
@@ -53,17 +54,70 @@ def buildGraph(args, train_size, valid_size, test_size, dim):
         else:
             print("undefined loss type")
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(train_loss)
 
-        return W, b, train_pred, train_y, loss, optimizer
+        return W, b, train_pred, train_y, train_loss, optimizer
 
 
-def sgd(W, b, train_x, train_y, args.lr, args.epochs, args.reg, args.error_tol, valid_x, valid_y, test_x, test_y):
-    sample_n = np.shape(train_y)[0]
+def get_rand_permutation(train_size, valid_size, test_size):
+    train_index = np.arange(train_size)
+    train_shuffled = np.random.shuffle(train_index)
 
-    with tf.Sessions(graph = sgd_graph):
-        batch_number = math.floor(sample_n/args.batch_size)
-        tf.global_variables_initializer().run()
+    valid_index = np.arange(valid_size)
+    valid_shuffled = np.random.shuffle(valid_index)
+
+    test_index = np.arange(test_size)
+    test_shuffled = np.random.shuffle(test_index)
+
+    return train_shuffled, valid_shuffled, test_shuffled
+
+
+def sgd(args):
+    train_x, valid_x, test_x, train_y, valid_y, test_y = loadData()
+
+    train_x = np.resize(train_x, (len(train_y), 28*28))
+    valid_x = np.resize(valid_x, (len(valid_y), 28*28))
+    test_x = np.resize(test_x, (len(test_y), 28*28))
+
+    train_size = np.shape(train_y)[0]
+    valid_size = np.shape(valid_y)[0]
+    test_size = np.shape(test_y)[0]
+
+    dim = (np.shape(train_x)[0][0])**2
+    W, b, train_pred, train_y, train_loss, optimizer = buildGraph(args, train_size, dim)
+
+    n_batches = math.floor((train_y.shape[0]/args.batch_size))
+    with tf.Sessions() as sess:
+
+        sess.run(tf.global_variables_initializer())
+
+        for i in range(args.epochs):
+
+            train_shuffled, valid_shuffled, test_shuffled = get_rand_permutation(train_size, valid_size, test_size)
+            train_x = train_x[train_shuffled]
+            train_y = train_y[train_shuffled]
+
+            valid_x = valid_x[valid_shuffled]
+            valid_y = valid_y[valid_shuffled]
+
+            test_x = test_x[test_shuffled]
+            test_y = test_y[test_shuffled]
+
+            for j in range(n_batches):
+
+                batch_x = train_x[i * args.batch_size : (i + 1) * args.batch_size]
+                batch_y = train_x[i * args.batch_size : (i + 1) * args.batch_size]
+
+
+                _W, _b, _train_pred, _train_y, _train_loss, _optimizer = sess.run([ W, b, train_pred, train_y, train_loss, optimizer], feed_dict = {
+                    train_x: batch_x,
+                    train_y: batch_y})
+
+                
+
+
+
+
 
 
 
