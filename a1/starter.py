@@ -124,15 +124,7 @@ def get_acc(W, b, x, y):
     return corr/len(y)
 
 
-# def buildGraph(loss="MSE"):
-#     # Initialize weight and bias tensors
-#     tf.set_random_seed(421)
-#
-#     if loss == "MSE":
-#     # Your implementation
-#
-#     elif loss == "CE":
-# # Your implementation here
+
 
 
 def plot_loss_acc(train_loss_rec, train_acc_rec, valid_loss_rec, valid_acc_rec, test_loss_rec, test_acc_rec):
@@ -208,7 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=2000)
     parser.add_argument('--reg', type=int, default=0.5)
     parser.add_argument('--error_tol', type=int, default=0.2)
-    parser.add_argument('--lossType', type=str, default='CE')
+    parser.add_argument('--lossType', choices=['mse', 'ce'], default='mse')
 
     args = parser.parse_args()
 
