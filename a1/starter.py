@@ -62,10 +62,10 @@ def gradCE(W, b, x, y, reg):
     z = np.matmul(x, W) + b
     y_hat = 1 / (1 + np.exp((-1)*z))
     for i in range(len(y_hat)):
-        if abs(y_hat[i]-1) < 0.0001:
-            y_hat[i] -= 0.1
-        elif y_hat[i] < 0.0001:
-            y_hat[i] += 0.1
+        if abs(y_hat[i]-1) < 0.1:
+            y_hat[i] -= 0.001
+        elif y_hat[i] < 0.1:
+            y_hat[i] += 0.001
 
     inter_mat_dw = np.transpose((-1)*y/y_hat + (1-y)/(1-y_hat) * (np.exp((-1)*z)/(1 + np.exp(-1*z))**2))
     dl_dw = np.mean(np.matmul(inter_mat_dw, x)) + np.transpose(reg * W)
@@ -86,10 +86,10 @@ def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, lossType
 
     for epoch in range(epochs):
 
-        if lossType == 'MSE':
+        if lossType == 'mse':
             dl_dw, dl_db = gradMSE(W, b, train_x, train_y, reg)
             loss = MSE
-        elif lossType == 'CE':
+        elif lossType == 'ce':
             dl_dw, dl_db = gradCE(W, b, train_x, train_y, reg)
             loss = crossEntropyLoss
         W = W - np.transpose(alpha * dl_dw)
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=2000)
     parser.add_argument('--reg', type=int, default=0.5)
     parser.add_argument('--error_tol', type=int, default=0.2)
-    parser.add_argument('--lossType', choices=['mse', 'ce'], default='mse')
+    parser.add_argument('--lossType', choices=['mse', 'ce'], default='ce')
 
     args = parser.parse_args()
 
