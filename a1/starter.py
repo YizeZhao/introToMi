@@ -74,6 +74,7 @@ def gradCE_old(W, b, x, y, reg):
     # print('dl_db: ', np.shape(dl_db))
     return dl_dw, dl_db
 
+
 def gradCE(W, b, x, y, reg):
     n = np.shape(y)[0]
     z = np.matmul(x, W) + b
@@ -97,10 +98,10 @@ def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, lossType
 
     for epoch in range(epochs):
 
-        if lossType == 'mse':
+        if lossType == 'MSE':
             dl_dw, dl_db = gradMSE(W, b, train_x, train_y, reg)
             loss = MSE
-        elif lossType == 'ce':
+        elif lossType == 'CE':
             dl_dw, dl_db = gradCE(W, b, train_x, train_y, reg)
             loss = crossEntropyLoss
         W = W - np.transpose(alpha * dl_dw)
