@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from starter import *
+import argparse
 
 
 def get_acc_two(pred, labels):
@@ -113,10 +114,30 @@ def sgd(args):
                     train_x: batch_x,
                     train_y: batch_y})
 
+                train_acc = get_acc_two(train_pred, train_y)
+
+                print(train_acc)
+
                 
 
 
+def main(args):
 
+    sgd(args)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--batch-size', type=int, default=64)
+    parser.add_argument('--seed', type=int, default=1)
+    parser.add_argument('--lr', type=float, default=0.005)
+    parser.add_argument('--epochs', type=int, default=2000)
+    parser.add_argument('--reg', type=int, default=0.5)
+    parser.add_argument('--error_tol', type=int, default=0.2)
+    parser.add_argument('--lossType', choices=['MSE', 'CE'], default='CE')
+
+    args = parser.parse_args()
+
+    main(args)
 
 
 
