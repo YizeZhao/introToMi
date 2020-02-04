@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import math
+import time
 
 
 def loadData():
@@ -87,7 +89,7 @@ def gradCE(W, b, x, y, reg):
     return dl_dw, dl_db
 
 
-def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, lossType, valid_x, valid_y, test_x, test_y):
+def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, valid_x, valid_y, test_x, test_y):
     # trainning loop
     train_loss_rec = []
     train_acc_rec = []
@@ -95,17 +97,26 @@ def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, lossType
     valid_acc_rec = []
     test_loss_rec = []
     test_acc_rec = []
+    last_w = 0
+    cur_w = 0
 
     for epoch in range(epochs):
-
-        if lossType == 'MSE':
+    # epoch = 0
+    # while True:
+    #     epoch += 1
+        if args.lossType == 'MSE':
             dl_dw, dl_db = gradMSE(W, b, train_x, train_y, reg)
             loss = MSE
-        elif lossType == 'CE':
+        elif args.lossType == 'CE':
             dl_dw, dl_db = gradCE(W, b, train_x, train_y, reg)
             loss = crossEntropyLoss
         W = W - np.transpose(alpha * dl_dw)
         b = b - alpha * dl_db
+
+        # cur_w = math.sqrt(sum(W**2))
+        # if abs(cur_w - last_w) < error_tol:
+        #     break
+        # last_w = math.sqrt(sum(W ** 2))
 
         if (epoch+1) % 10 == 0:
             train_loss = loss(W, b, train_x, train_y, args.reg)
@@ -125,6 +136,14 @@ def grad_descent(W, b, train_x, train_y, alpha, epochs, reg, error_tol, lossType
             print("epoch:", epoch, " | train_loss:", train_loss, " train_acc:", train_acc, " valid_loss:", valid_loss, " valid_acc:", valid_acc, " test_loss:", test_loss, " test_acc:", test_acc)
 
     plot_loss_acc(train_loss_rec, train_acc_rec, valid_loss_rec, valid_acc_rec, test_loss_rec, test_acc_rec)
+    # train_loss = loss(W, b, train_x, train_y, args.reg)
+    # train_acc = get_acc(W, b, train_x, train_y)
+    # valid_acc = get_acc(W, b, valid_x, valid_y)
+    # valid_loss = loss(W, b, valid_x, valid_y, reg)
+    # test_acc = get_acc(W, b, test_x, test_y)
+    # test_loss = loss(W, b, test_x, test_y, reg)
+    # print("epoch:", epoch, " | train_loss:", train_loss, " train_acc:", train_acc, " valid_loss:", valid_loss, " valid_acc:", valid_acc, " test_loss:", test_loss, " test_acc:", test_acc)
+    return W, b
 
 
 def get_acc(W, b, x, y):
@@ -136,12 +155,9 @@ def get_acc(W, b, x, y):
     return corr/len(y)
 
 
-
-
-
 def plot_loss_acc(train_loss_rec, train_acc_rec, valid_loss_rec, valid_acc_rec, test_loss_rec, test_acc_rec):
-
     x = np.arange(len(train_loss_rec)) + 1
+    x = x * 10
     plt.subplot(211)
     plt.plot(x, train_loss_rec, label = "train_loss")
     plt.plot(x, valid_loss_rec, label="validation_loss")
@@ -186,7 +202,6 @@ def get_analytical(train_x, train_y, valid_x, valid_y, test_x, test_y, args):
 
 
 def main(args):
-
     train_x, valid_x, test_x, train_y, valid_y, test_y = loadData()
     train_x = np.resize(train_x, (len(train_y), 28*28))
     valid_x = np.resize(valid_x, (len(valid_y), 28*28))
@@ -200,18 +215,24 @@ def main(args):
     W = np.random.rand(28*28, 1)
     b = np.random.rand(1)
 
-    grad_descent(W, b, train_x, train_y, args.lr, args.epochs, args.reg, args.error_tol, args.lossType, valid_x, valid_y, test_x, test_y)
-    get_analytical(train_x, train_y,  valid_x, valid_y, test_x, test_y, args)
+    grad_start = time.time()
+    grad_descent(W, b, train_x, train_y, args.lr, args.epochs, args.reg, args.error_tol, valid_x, valid_y, test_x, test_y)
+    grad_end = time.time()
+    get_analytical(train_x, train_y, valid_x, valid_y, test_x, test_y, args)
+    anal_end = time.time()
+    grad_time = grad_end - grad_start
+    anal_time = anal_end - grad_end
+    print('gradient descent computation time: ', grad_time)
+    print('analytical solution computation time: ', anal_time)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch-size', type=int, default=64)
-    parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--epochs', type=int, default=2000)
-    parser.add_argument('--reg', type=int, default=0.5)
-    parser.add_argument('--error_tol', type=int, default=0.2)
+    parser.add_argument('--epochs', type=int, default=5000)
+    parser.add_argument('--reg', type=float, default=0.1)
+    parser.add_argument('--error_tol', type=float, default=10**(-7))
     parser.add_argument('--lossType', choices=['MSE', 'CE'], default='CE')
 
     args = parser.parse_args()
