@@ -157,7 +157,7 @@ def get_acc(W, b, x, y):
 
 def plot_loss_acc(train_loss_rec, train_acc_rec, valid_loss_rec, valid_acc_rec, test_loss_rec, test_acc_rec):
     x = np.arange(len(train_loss_rec)) + 1
-    x = x * 10
+    #x = x * 10
     plt.subplot(211)
     plt.plot(x, train_loss_rec, label = "train_loss")
     plt.plot(x, valid_loss_rec, label="validation_loss")

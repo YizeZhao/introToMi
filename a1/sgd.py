@@ -20,13 +20,16 @@ def get_acc_two(pred, labels):
     return correct/batch_size
 
 
-def buildGraph(args, valid_size, test_size, dim):
+def buildGraph(args, train_size, valid_size, test_size, dim):
     # Initialize weight and bias tensors
     tf.set_random_seed(421)
 
     # specify datasizes
     X = tf.placeholder(shape=(args.batch_size, dim), dtype=tf.float32, name='X')
     Y = tf.placeholder(shape=(args.batch_size, 1), dtype=tf.float32, name='Y')
+
+    train_x = tf.placeholder(shape=(train_size, dim), dtype=tf.float32)
+    train_y = tf.placeholder(shape=(train_size, 1), dtype=tf.float32)
 
     valid_x = tf.placeholder(shape=(valid_size, dim), dtype=tf.float32)
     valid_y = tf.placeholder(shape=(valid_size, 1), dtype=tf.float32)
@@ -41,6 +44,7 @@ def buildGraph(args, valid_size, test_size, dim):
     b = tf.Variable(tf.random_uniform(shape=(), minval=0, maxval=1, dtype=tf.float32))
 
     train_pred = tf.matmul(X,W) + b
+    all_train_pred = tf.matmul(train_x,W) + b
     valid_pred = tf.matmul(valid_x,W) + b
     test_pred = tf.matmul(test_x,W) + b
         
@@ -57,9 +61,9 @@ def buildGraph(args, valid_size, test_size, dim):
     else:
         print("undefined loss type")
 
-    optimizer = tf.train.AdamOptimizer(learning_rate=0.001,beta1=0.9,beta2=0.999).minimize(train_loss)
+    optimizer = tf.train.AdamOptimizer(learning_rate=args.lr, beta1=0.9, beta2=0.999, epsilon=1e-08).minimize(train_loss)
 
-    return W, b, X, Y, valid_x, valid_y, test_x, test_y, train_pred, valid_pred, test_pred, train_loss, valid_loss, test_loss, optimizer
+    return W, b, X, Y, valid_x, valid_y, test_x, test_y, train_x, train_y, train_pred, all_train_pred, valid_pred, test_pred, train_loss, valid_loss, test_loss, optimizer
 
 
 
@@ -92,9 +96,9 @@ def sgd(args):
     test_size = np.shape(test_y)[0]
 
     dim = (np.shape(train_x)[1])
-    W_, b_, X_, Y_, valid_x_, valid_y_, test_x_, test_y_, train_pred_, valid_pred_, test_pred_, train_loss_, \
+    W_, b_, X_, Y_, valid_x_, valid_y_, test_x_, test_y_, train_x_, train_y_, train_pred_, all_train_pred_, valid_pred_, test_pred_, train_loss_, \
     valid_loss_, test_loss_, optimizer_ \
-        = buildGraph(args, valid_size, test_size, dim)
+        = buildGraph(args, train_size, valid_size, test_size, dim)
 
     n_batches = math.floor((int(train_y.shape[0])/args.batch_size))
 
@@ -112,34 +116,38 @@ def sgd(args):
         for i in range(args.epochs):
 
             train_shuffled = get_rand_permutation(train_size)
-            train_x = train_x[train_shuffled]
-            train_y = train_y[train_shuffled]
+            train_x_shuffeled = train_x[train_shuffled]
+            train_y_shuffeled = train_y[train_shuffled]
 
 
             for j in range(n_batches):
 
-                batch_x = train_x[j * args.batch_size : (j + 1) * args.batch_size]
-                batch_y = train_y[j * args.batch_size : (j + 1) * args.batch_size]
+                batch_x = train_x_shuffeled[j * args.batch_size : (j + 1) * args.batch_size]
+                batch_y = train_y_shuffeled[j * args.batch_size : (j + 1) * args.batch_size]
 
 
 
-                _W, _b, _Y, _valid_y, _test_y, _train_pred, _valid_pred, _test_pred, _train_loss, _valid_loss, _test_loss, _optimizer = sess.run([ W_, b_, Y_, valid_x_, test_y_, train_pred_, valid_pred_, test_pred_, train_loss_, valid_loss_, test_loss_, optimizer_], feed_dict = {
+                _W, _b, _Y, _valid_y, _test_y, _train_pred, _all_train_pred, _valid_pred, _test_pred, _train_loss, _valid_loss, _test_loss, _optimizer = sess.run([ W_, b_, Y_, valid_x_, test_y_, train_pred_, all_train_pred_, valid_pred_, test_pred_, train_loss_, valid_loss_, test_loss_, optimizer_], feed_dict = {
                     X_: batch_x,
                     Y_: batch_y,
                     valid_x_: valid_x,
                     valid_y_: valid_y,
                     test_x_: test_x,
-                    test_y_: test_y})
+                    test_y_: test_y,
+                    train_x_: train_x,
+                    train_y_: train_y
+                })
 
 
 
 
-                train_acc = get_acc_two(_train_pred, _Y)
+                train_acc = get_acc_two(_all_train_pred, train_y)
+                # train_acc = get_acc_two(_train_pred, batch_y)
                 valid_acc = get_acc_two(_valid_pred, valid_y)
                 test_acc = get_acc_two(_test_pred, test_y)
 
 
-                if (i+1)%10 and (j+1)%10:
+                if j == n_batches - 1:
 
                     print("epoch:", i, "batch:", j, " | train_loss:", _train_loss, " | train_acc:", train_acc, " | valid_loss:", _valid_loss, " | train_acc:", valid_acc, " | test_loss:", _test_loss, " | test_acc:", test_acc)
                     train_loss_rec.append(_train_loss)
@@ -161,13 +169,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch-size', type=int, default=500)
     parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--lr', type=float, default=0.005)
-    parser.add_argument('--epochs', type=int, default=200)
-    parser.add_argument('--reg', type=int, default=0.5)
+    parser.add_argument('--lr', type=float, default=0.001)
+    parser.add_argument('--epochs', type=int, default=700)
+    parser.add_argument('--reg', type=int, default=0)
     parser.add_argument('--error_tol', type=int, default=0.2)
     parser.add_argument('--lossType', choices=['MSE', 'CE'], default='CE')
-    parser.add_argument('--beta-1', choices=['MSE', 'CE'], default='CE')
-    parser.add_argument('--beta-2', choices=['MSE', 'CE'], default='CE')
+    parser.add_argument('--beta-1', type=float, default=0.9)
+    parser.add_argument('--beta-2', type=float, default=0.99)
 
 
     args = parser.parse_args()
