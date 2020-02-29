@@ -61,7 +61,7 @@ def buildGraph(args, train_size, valid_size, test_size, dim):
     else:
         print("undefined loss type")
 
-    optimizer = tf.train.AdamOptimizer(learning_rate=args.lr, beta1=0.9, beta2=0.999, epsilon=1e-08).minimize(train_loss)
+    optimizer = tf.train.AdamOptimizer(learning_rate=args.lr, beta1=args.beta_1, beta2=args.beta_2, epsilon=args.epsilon).minimize(train_loss)
 
     return W, b, X, Y, valid_x, valid_y, test_x, test_y, train_x, train_y, train_pred, all_train_pred, valid_pred, test_pred, train_loss, valid_loss, test_loss, optimizer
 
@@ -149,7 +149,7 @@ def sgd(args):
 
                 if j == n_batches - 1:
 
-                    print("epoch:", i, "batch:", j, " | train_loss:", _train_loss, " | train_acc:", train_acc, " | valid_loss:", _valid_loss, " | train_acc:", valid_acc, " | test_loss:", _test_loss, " | test_acc:", test_acc)
+                    print("epoch:", i, "batch:", j, " | train_loss:", _train_loss, " | train_acc:", train_acc, " | valid_loss:", _valid_loss, " | valid_acc:", valid_acc, " | test_loss:", _test_loss, " | test_acc:", test_acc)
                     train_loss_rec.append(_train_loss)
                     train_acc_rec.append(train_acc)
                     valid_loss_rec.append(_valid_loss)
@@ -173,9 +173,10 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=700)
     parser.add_argument('--reg', type=int, default=0)
     parser.add_argument('--error_tol', type=int, default=0.2)
-    parser.add_argument('--lossType', choices=['MSE', 'CE'], default='CE')
+    parser.add_argument('--lossType', choices=['MSE', 'CE'], default='CE')  
     parser.add_argument('--beta-1', type=float, default=0.9)
-    parser.add_argument('--beta-2', type=float, default=0.99)
+    parser.add_argument('--beta-2', type=float, default=0.999)
+    parser.add_argument('--epsilon', type=float, default=1e-04)
 
 
     args = parser.parse_args()
