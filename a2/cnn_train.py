@@ -85,7 +85,7 @@ def main(args):
 
         for i, data in enumerate(train_loader, 0):
 
-            if (i+1)%args.eval_every == 0:
+            if (i)%args.eval_every == 0:
                 valid_acc, valid_loss = evaluate(notMinstCNN, valid_loader, criterion)
                 train_acc, train_loss = evaluate(notMinstCNN, train_loader, criterion)
                 test_acc, test_loss = evaluate(notMinstCNN, test_loader, criterion)
@@ -119,23 +119,23 @@ def main(args):
 
     print('Finished Training')
 
-    x = np.arange(args.epochs) + 1
+    x = (np.arange(args.epochs) + 1)*args.eval_every
     plt.subplot(211)
     plt.plot(x, train_loss_record, label = "train_loss")
     plt.plot(x, valid_loss_record, label="validation_loss")
     plt.plot(x, test_loss_record, label="test_loss")
-    plt.xlabel('number of epochs')
+    plt.xlabel('number of steps')
     plt.ylabel('loss')
-    plt.title('Loss VS epochs')
+    plt.title('Loss VS SGD steps')
     plt.legend(loc = 'upper right')
 
     plt.subplot(212)
     plt.plot(x, train_acc_record, label = "train_accuracy")
     plt.plot(x, valid_acc_record, label = "validation_accuracy")
     plt.plot(x, test_acc_record, label="test_accuracy")
-    plt.xlabel('number of epochs')
+    plt.xlabel('number of steps')
     plt.ylabel('accuracy')
-    plt.title('Accuracy VS epochs')
+    plt.title('Accuracy VS SGD steps')
     plt.legend(loc = 'lower right')
 
     plt.savefig('/content/introToMi/a2/figure1')
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default = 32)
     parser.add_argument('--lr', type=float, default = 0.0001)
-    parser.add_argument('--epochs', type=int, default=1)
+    parser.add_argument('--epochs', type=int, default=2)
     parser.add_argument('--loss_type', choices=['mse', 'ce'], default='ce')
     parser.add_argument('--hidden_size', type=int, default=784)
     parser.add_argument('--seed', type=int, default=42)
