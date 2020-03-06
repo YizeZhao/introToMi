@@ -65,19 +65,6 @@ def main(args):
     test_loader = DataLoader(test_dataset, batch_size=2724, shuffle=False)
 
 
-
-
-    evaluate = evaluate_ce
-    criterion = torch.nn.CrossEntropyLoss()
-
-    if torch.cuda.is_available():
-        notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel).cuda()
-    else:
-        notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel)
-
-    optimizer = torch.optim.Adam(notMinstCNN.parameters(), lr=args.lr)
-
-
     train_acc_record = []
     valid_acc_record = []
     test_acc_record = []
@@ -85,17 +72,43 @@ def main(args):
     valid_loss_record = []
     test_loss_record = []
 
-   # since = time()
+    evaluate = evaluate_ce
+    criterion = torch.nn.CrossEntropyLoss()
+
+    if torch.cuda.is_available():
+        notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel, args.r_drops).cuda()
+    else:
+        notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel, args.r_drops)
+
+    optimizer = torch.optim.Adam(notMinstCNN.parameters(), lr=args.lr)
 
     for epoch in range(args.epochs):  # loop over the dataset multiple times
 
         for i, data in enumerate(train_loader, 0):
+            inputs, labels = data
+            optimizer.zero_grad()
+            outputs = notMinstCNN(inputs.float())
+            loss = criterion(outputs.float(), torch.max(labels, 1)[1])
+
+            # UNCOMMENT FOR REGULARIZATION
+            # l2 = 0
+            # for name, p in notMinstCNN.fc1.named_parameters():
+            #     if 'weight' in name:
+            #         l2 = l2 + (p**2).sum()
+            # for name, p in notMinstCNN.fc2.named_parameters():
+            #     if 'weight' in name:
+            #         l2 = l2 + (p**2).sum()
+            #
+            # loss = loss + args.r_lambda * l2/labels.shape[0]
+            loss.backward()
+            optimizer.step()
 
             if (i)%args.eval_every == 0:
                 valid_acc, valid_loss = evaluate(notMinstCNN, valid_loader, criterion)
                 train_acc, train_loss = evaluate(notMinstCNN, train_loader, criterion)
                 test_acc, test_loss = evaluate(notMinstCNN, test_loader, criterion)
-                print("epoch:", epoch, "batch: ", i, " | train_loss:", train_loss.item(), " train_acc:", train_acc, " valid_loss:", valid_loss.item(),
+                print("epoch:", epoch, "batch: ", i, " | train_loss:", train_loss.item(), " train_acc:", \
+                      train_acc, " valid_loss:", valid_loss.item(),
                       " valid_acc:", valid_acc, " test_loss:", test_loss.item(), " test_acc:", test_acc)
 
                 train_acc_record.append(train_acc)
@@ -104,31 +117,6 @@ def main(args):
                 valid_loss_record.append(valid_loss)
                 test_loss_record.append(test_loss)
                 test_acc_record.append(test_acc)
-
-            # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-            #print("inputs, labels: ", inputs, labels)
-
-            # zero the parameter gradients
-            optimizer.zero_grad()
-
-            # forward + backward + optimize
-            outputs = notMinstCNN(inputs.float())
-
-            loss = criterion(outputs.float(), torch.max(labels, 1)[1])
-
-            l2 = 0
-            for name, p in notMinstCNN.fc1.named_parameters():
-                if 'weight' in name:
-                    l2 = l2 + (p**2).sum()
-            for name, p in notMinstCNN.fc2.named_parameters():
-                if 'weight' in name:
-                    l2 = l2 + (p**2).sum()
-
-            loss = loss + args.r_lambda * l2/labels.shape[0]
-            loss.backward()
-            optimizer.step()
-
 
 
     print('Finished Training')
@@ -176,6 +164,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_kernel', type=int, default=27)
     parser.add_argument('--eval_every', type=int, default=10)
     parser.add_argument('--r_lambda', type=float, default=0.01)
+    parser.add_argument('--r_drops', type=float, default=0.9)
 
 
     args = parser.parse_args()
