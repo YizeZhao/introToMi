@@ -126,7 +126,7 @@ def main(args):
     print('Finished Training')
 
     x = (np.arange(len(train_loss_record)) + 1)*args.eval_every
-    plt.subplot(211)
+    plt.figure(figsize=(12,7))
     plt.plot(x, train_loss_record, label = "train_loss")
     plt.plot(x, valid_loss_record, label="validation_loss")
     plt.plot(x, test_loss_record, label="test_loss")
@@ -134,8 +134,10 @@ def main(args):
     plt.ylabel('loss')
     plt.title('Loss VS SGD steps')
     plt.legend(loc = 'upper right')
+    plt.savefig('/content/introToMi/a2/loss_curve.pdf')
+    plt.savefig('/content/drive/My Drive/ece421_plots/loss_curve_1.pdf')
 
-    plt.subplot(212)
+    plt.figure(figsize=(12,7))
     plt.plot(x, train_acc_record, label = "train_accuracy")
     plt.plot(x, valid_acc_record, label = "validation_accuracy")
     plt.plot(x, test_acc_record, label="test_accuracy")
@@ -143,8 +145,10 @@ def main(args):
     plt.ylabel('accuracy')
     plt.title('Accuracy VS SGD steps')
     plt.legend(loc = 'lower right')
+    plt.savefig('/content/introToMi/a2/acc_curve.pdf')
+    plt.savefig('/content/drive/My Drive/ece421_plots/acc_curve_1.pdf')
 
-    plt.savefig('/content/introToMi/a2/figure1')
+    
     plt.show()
 
 
@@ -153,14 +157,14 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default = 5000)
+    parser.add_argument('--batch_size', type=int, default = 32)
     parser.add_argument('--lr', type=float, default = 0.0001)
-    parser.add_argument('--epochs', type=int, default=2)
+    parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--loss_type', choices=['mse', 'ce'], default='ce')
     parser.add_argument('--hidden_size', type=int, default=784)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--num_kernel', type=int, default=27)
-    parser.add_argument('--eval_every', type=int, default=1)
+    parser.add_argument('--eval_every', type=int, default=10)
 
     args = parser.parse_args()
 
