@@ -84,6 +84,21 @@ def main(args):
     for epoch in range(args.epochs):  # loop over the dataset multiple times
 
         for i, data in enumerate(train_loader, 0):
+
+            if (i+1)%args.eval_every == 0:
+                valid_acc, valid_loss = evaluate(notMinstCNN, valid_loader, criterion)
+                train_acc, train_loss = evaluate(notMinstCNN, train_loader, criterion)
+                test_acc, test_loss = evaluate(notMinstCNN, test_loader, criterion)
+                print("epoch:", epoch, "batch: ", i, " | train_loss:", train_loss.item(), " train_acc:", train_acc, " valid_loss:", valid_loss.item(),
+                      " valid_acc:", valid_acc, " test_loss:", test_loss.item(), " test_acc:", test_acc)
+
+                train_acc_record.append(train_acc)
+                valid_acc_record.append(valid_acc)
+                train_loss_record.append(train_loss)
+                valid_loss_record.append(valid_loss)
+                test_loss_record.append(test_loss)
+                test_acc_record.append(test_acc)
+
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             #print("inputs, labels: ", inputs, labels)
@@ -100,19 +115,7 @@ def main(args):
             loss.backward()
             optimizer.step()
 
-            if (i+1)%args.eval_every == 0:
-                valid_acc, valid_loss = evaluate(notMinstCNN, valid_loader, criterion)
-                train_acc, train_loss = evaluate(notMinstCNN, train_loader, criterion)
-                test_acc, test_loss = evaluate(notMinstCNN, test_loader, criterion)
-                print("epoch:", epoch, "batch: ", i, " | train_loss:", train_loss.item(), " train_acc:", train_acc, " valid_loss:", valid_loss.item(),
-                      " valid_acc:", valid_acc, " test_loss:", test_loss.item(), " test_acc:", test_acc)
 
-                train_acc_record.append(train_acc)
-                valid_acc_record.append(valid_acc)
-                train_loss_record.append(train_loss)
-                valid_loss_record.append(valid_loss)
-                test_loss_record.append(test_loss)
-                test_acc_record.append(test_acc)
 
     print('Finished Training')
 
