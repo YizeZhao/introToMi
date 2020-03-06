@@ -114,10 +114,18 @@ def main(args):
 
             # forward + backward + optimize
             outputs = notMinstCNN(inputs.float())
-            if args.loss_type == 'ce' :
-                loss = criterion(outputs.float(), torch.max(labels, 1)[1])
-            elif args.loss_type == 'mse' :
-                loss = criterion(outputs.float(), labels.float())
+
+            loss = criterion(outputs.float(), torch.max(labels, 1)[1])
+
+            l2 = 0
+            for name, p in notMinstCNN.fc1.named_parameters():
+                if 'weight' in name:
+                    l2 = l2 + (p**2).sum()
+            for name, p in notMinstCNN.fc2.named_parameters():
+                if 'weight' in name:
+                    l2 = l2 + (p**2).sum()
+
+            loss = loss + args.r_lambda * l2/labels.shape[0]
             loss.backward()
             optimizer.step()
 
@@ -136,6 +144,8 @@ def main(args):
     plt.legend(loc = 'upper right')
     plt.savefig('/content/introToMi/a2/loss_curve.pdf')
     plt.savefig('/content/drive/My Drive/ece421_plots/loss_curve_1.pdf')
+
+    plt.show()
 
     plt.figure(figsize=(12,7))
     plt.plot(x, train_acc_record, label = "train_accuracy")
@@ -165,6 +175,8 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--num_kernel', type=int, default=27)
     parser.add_argument('--eval_every', type=int, default=10)
+    parser.add_argument('--r_lambda', type=float, default=0.01)
+
 
     args = parser.parse_args()
 

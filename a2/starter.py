@@ -155,6 +155,13 @@ def training(args):
     v_bh = 1e-5 * np.ones_like(b_h)
     v_bo = 1e-5 * np.ones_like(b_o)
 
+    train_acc_record = []
+    valid_acc_record = []
+    test_acc_record = []
+    train_loss_record = []
+    valid_loss_record = []
+    test_loss_record = []
+
     for epoch in range(args.epochs):
         #train_x, train_y = shuffle(train_x, train_y)
 
@@ -179,10 +186,47 @@ def training(args):
         b_o = b_o - v_bo
 
 
-        if (epoch+1)%5 == 0:
+        if (epoch)%args.eval_every == 0:
             train_loss, valid_loss, test_loss, train_acc, valid_acc, test_acc = get_acc_loss(w_h, w_o, b_h, b_o)
+
+            train_acc_record.append(train_acc)
+            valid_acc_record.append(valid_acc)
+            train_loss_record.append(train_loss)
+            valid_loss_record.append(valid_loss)
+            test_loss_record.append(test_loss)
+            test_acc_record.append(test_acc)
+
             print("epoch:", epoch, " | train_loss:", train_loss, " train_acc:", train_acc, " valid_loss:", valid_loss,
                   " valid_acc:", valid_acc, " test_loss:", test_loss, " test_acc:", test_acc)
+
+    x = (np.arange(len(train_loss_record)) + 1) * args.eval_every
+    plt.figure(figsize=(12, 7))
+    plt.plot(x, train_loss_record, label="train_loss")
+    plt.plot(x, valid_loss_record, label="validation_loss")
+    plt.plot(x, test_loss_record, label="test_loss")
+    plt.xlabel('number of steps')
+    plt.ylabel('loss')
+    plt.title('Loss VS SGD steps')
+    plt.legend(loc='upper right')
+    #plt.savefig('/content/introToMi/a2/loss_curve.pdf')
+    #plt.savefig('/content/drive/My Drive/ece421_plots/loss_curve_1.pdf')
+    plt.savefig('numpy_loss_curve.pdf')
+
+    plt.show()
+
+    plt.figure(figsize=(12, 7))
+    plt.plot(x, train_acc_record, label="train_accuracy")
+    plt.plot(x, valid_acc_record, label="validation_accuracy")
+    plt.plot(x, test_acc_record, label="test_accuracy")
+    plt.xlabel('number of steps')
+    plt.ylabel('accuracy')
+    plt.title('Accuracy VS SGD steps')
+    plt.legend(loc='lower right')
+    #plt.savefig('/content/introToMi/a2/acc_curve.pdf')
+    #plt.savefig('/content/drive/My Drive/ece421_plots/acc_curve_1.pdf')
+    plt.savefig('numpy_acc_curve.pdf')
+
+    plt.show()
 
 trainData, validData, testData, trainTarget, validTarget, testTarget = loadData()
 
@@ -196,11 +240,11 @@ def main(args):
     training(args)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=2000)
-    parser.add_argument('--hidden_num', type=float, default=100)
+    parser.add_argument('--epochs', type=int, default=200)
+    parser.add_argument('--hidden_num', type=float, default=2000)
     parser.add_argument('--gamma', type=float, default=0.99)
     parser.add_argument('--alpha', type=float, default=0.005)
-
+    parser.add_argument('--eval_every', type=int, default=1)
 
 
     args = parser.parse_args()
