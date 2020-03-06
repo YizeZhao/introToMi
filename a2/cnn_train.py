@@ -143,7 +143,7 @@ def main(args):
     plt.title('Loss VS SGD steps')
     plt.legend(loc = 'upper right')
     plt.savefig('/content/introToMi/a2/loss_curve.pdf')
-    plt.savefig('/content/drive/My Drive/ece421_plots/loss_curve_lambda1.pdf')
+    plt.savefig('/content/drive/My Drive/ece421_plots/loss_curve_lambda2.pdf')
 
     plt.show()
 
@@ -156,7 +156,7 @@ def main(args):
     plt.title('Accuracy VS SGD steps')
     plt.legend(loc = 'lower right')
     plt.savefig('/content/introToMi/a2/acc_curve.pdf')
-    plt.savefig('/content/drive/My Drive/ece421_plots/acc_curve_lambda1.pdf')
+    plt.savefig('/content/drive/My Drive/ece421_plots/acc_curve_lambda2.pdf')
 
     
     plt.show()
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--num_kernel', type=int, default=27)
     parser.add_argument('--eval_every', type=int, default=10)
-    parser.add_argument('--r_lambda', type=float, default=0.01)
+    parser.add_argument('--r_lambda', type=float, default=0.5)
 
 
     args = parser.parse_args()
