@@ -134,6 +134,8 @@ def main(args):
     plt.ylabel('accuracy')
     plt.title('Accuracy VS epochs')
     plt.legend(loc = 'lower right')
+
+    plt.savefig('/content/introToMi/a2/figure1')
     plt.show()
 
 
