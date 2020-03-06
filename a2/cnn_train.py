@@ -26,7 +26,10 @@ def evaluate_ce(model, test_loader, criterion):
     with torch.no_grad():
         for data in test_loader:
             images, labels = data
-            images, labels = images.cuda(), labels.cuda()
+            if torch.cuda.is_available():
+                images, labels = images.cuda(), labels.cuda()
+            else:
+                images, labels = images, labels
             outputs = model(images.float())
             loss = criterion(outputs.float(), torch.max(labels, axis=1)[1])
             eval_loss += loss
@@ -67,7 +70,10 @@ def main(args):
     evaluate = evaluate_ce
     criterion = torch.nn.CrossEntropyLoss()
 
-    notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel).cuda()
+    if torch.cuda.is_available():
+        notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel).cuda()
+    else:
+        notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel)
 
     optimizer = torch.optim.Adam(notMinstCNN.parameters(), lr=args.lr)
 
@@ -119,7 +125,7 @@ def main(args):
 
     print('Finished Training')
 
-    x = (np.arange(args.epochs) + 1)*args.eval_every
+    x = (np.arange(len(train_loss_record)) + 1)*args.eval_every
     plt.subplot(211)
     plt.plot(x, train_loss_record, label = "train_loss")
     plt.plot(x, valid_loss_record, label="validation_loss")
@@ -147,14 +153,14 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default = 32)
+    parser.add_argument('--batch_size', type=int, default = 5000)
     parser.add_argument('--lr', type=float, default = 0.0001)
     parser.add_argument('--epochs', type=int, default=2)
     parser.add_argument('--loss_type', choices=['mse', 'ce'], default='ce')
     parser.add_argument('--hidden_size', type=int, default=784)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--num_kernel', type=int, default=27)
-    parser.add_argument('--eval_every', type=int, default=10)
+    parser.add_argument('--eval_every', type=int, default=1)
 
     args = parser.parse_args()
 
