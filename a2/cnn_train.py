@@ -26,6 +26,7 @@ def evaluate_ce(model, test_loader, criterion):
     with torch.no_grad():
         for data in test_loader:
             images, labels = data
+            images, labels = images.cuda(), labels.cuda()
             outputs = model(images.float())
             loss = criterion(outputs.float(), torch.max(labels, axis=1)[1])
             eval_loss += loss
@@ -40,9 +41,13 @@ def evaluate_ce(model, test_loader, criterion):
 def main(args):
 
     # =============================== Initialize arguments ================================
+    if torch.cuda.is_available():
+        print("Using cuda")
+        torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
 
     torch.manual_seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
 
     train_x, valid_x, test_x, trainTarget, validTarget, testTarget = loadData()
     train_y, valid_y, test_y = convertOneHot(trainTarget, validTarget, testTarget)
@@ -62,7 +67,7 @@ def main(args):
     evaluate = evaluate_ce
     criterion = torch.nn.CrossEntropyLoss()
 
-    notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel)
+    notMinstCNN = NotMinstClassifier(args.hidden_size, args.num_kernel).cuda()
 
     optimizer = torch.optim.Adam(notMinstCNN.parameters(), lr=args.lr)
 
