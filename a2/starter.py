@@ -47,7 +47,6 @@ def shuffle(trainData, trainTarget):
     return data, target
 
 
-
 def relu(x):
     x_copy = np.copy(x)
     x_copy[x < 0] = 0
@@ -67,9 +66,9 @@ def softmax(x):
     return np.exp(o) / np.sum(np.exp(o), axis=1, keepdims=True)
 
 
-# def computeLayer(X, W, b):
-#
-#     return np.matmul(np.transpose(X), W) + b
+def computeLayer(X, W, b):
+
+    return np.matmul(np.transpose(X), W) + b
 
 
 def CE(target, prediction):
@@ -78,9 +77,8 @@ def CE(target, prediction):
 
 def gradCE(target, prediction):
 
-    p = np.copy(prediction)
-    y = np.copy(target)
-    return p - y
+    return prediction - target
+
 
 def get_xavier(units_in, units_num, units_out):
     variance = 2.0 / (units_in + units_out)
