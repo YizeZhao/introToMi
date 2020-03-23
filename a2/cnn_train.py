@@ -131,7 +131,7 @@ def main(args):
     plt.title('Loss VS SGD steps')
     plt.legend(loc = 'upper right')
     plt.savefig('/content/introToMi/a2/loss_curve.pdf')
-    plt.savefig('/content/drive/My Drive/ece421_plots/loss_curve_lambda1.pdf')
+    plt.savefig('/content/drive/My Drive/ece421_plots/loss_curve_lambda2.pdf')
 
     plt.show()
 
@@ -144,7 +144,7 @@ def main(args):
     plt.title('Accuracy VS SGD steps')
     plt.legend(loc = 'lower right')
     plt.savefig('/content/introToMi/a2/acc_curve.pdf')
-    plt.savefig('/content/drive/My Drive/ece421_plots/acc_curve_lambda1.pdf')
+    plt.savefig('/content/drive/My Drive/ece421_plots/acc_curve_lambda2.pdf')
 
     
     plt.show()
